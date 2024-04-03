@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -Iinclude
 LDFLAGS = -pthread  # If using threads, or other libraries like -lm for math
 
 # Define source directories
@@ -30,6 +30,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 # Clean up binaries and objects
 clean:
 	rm -rf $(BIN_DIR)/* $(OBJ_DIR)/*
+	rmdir obj bin 2>/dev/null || true
 
 .PHONY: all clean
 
