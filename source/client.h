@@ -28,6 +28,7 @@ typedef struct
     char name[20];
     int rarity;
     int price;
+    int winner;
 } item;
 
 typedef struct 
@@ -35,7 +36,6 @@ typedef struct
     int pid;
     char name[20];
     int money;
-    item item_inventory[PLAYER_SIZE];
 } bidder;
 
 typedef struct 
@@ -54,3 +54,4 @@ typedef struct
 void connectToServer();
 void chooseItem();
 void bidInstance();
+void displayEndResults();

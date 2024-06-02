@@ -2,6 +2,7 @@
 
 int shmid;
 current_auction *currentAuction;
+sem_t *sem;
 
 int main()
 {
@@ -35,40 +36,64 @@ int main()
 
     printf("Auction is starting ! \n");
 
+    sleep(1);
+
     // Cycle through all items (each iteration of this loop is a new round of bidding)
     for (int i = 0; i < PLAYER_SIZE; i++)
     {
         currentAuction->current_bid_item = i;
+        currentAuction->last_bidder = -1;
         printf("Bidding on item %s\n", currentAuction->item_list[currentAuction->current_bid_item].name);
-        printItems();
         currentAuction->last_bid = currentAuction->item_list[currentAuction->current_bid_item].price;
 
         for (int j = 0; j < PLAYER_SIZE; j++)
         {
-            if (currentAuction->bidders[j].pid != 0)
+            if (currentAuction->bidders[j].pid != 0) {
+                printf("Sending signal to client %d\n", currentAuction->bidders[j].pid);
                 kill(currentAuction->bidders[j].pid, SIGUSR1);
+            }
         }
 
-        sleep(20);
-        currentAuction->bidders[currentAuction->last_bidder].money -= currentAuction->last_bid;
-        currentAuction->bidders[currentAuction->last_bidder].item_inventory[currentAuction->current_bid_item] = currentAuction->item_list[currentAuction->current_bid_item];
+        sleep(65);
+       
+        if (currentAuction->last_bidder == -1)
+        {
+            printf("No one bid on the item\n");
+        } else {
+            printf("\nThe winner is %s with a bid of %d\n", currentAuction->bidders[currentAuction->last_bidder].name, currentAuction->last_bid);
+            currentAuction->bidders[currentAuction->last_bidder].money = currentAuction->bidders[currentAuction->last_bidder].money - currentAuction->last_bid;
+            currentAuction->item_list[currentAuction->current_bid_item].winner = currentAuction->last_bidder;
+        }
     }
 
-    printf("Auction is over ! \n");
+    printf("\nAuction is over ! \n");
 
     for (int i = 0; i < PLAYER_SIZE; i++)
     {
-        for (int j = 0; j < PLAYER_SIZE; j++)
+        if (currentAuction->bidders[i].pid != 0)
         {
-            if (currentAuction->bidders[j].item_inventory[i].price == currentAuction->item_list[i].price)
-            {
-                printf("Item %s was won by %s\n", currentAuction->item_list[i].name, currentAuction->bidders[j].name);
-            }
+            kill(currentAuction->bidders[i].pid, SIGUSR2);
         }
     }
 
-    while (1)
-        ;
+    // Print the sum of rarity of all items won by each bidder
+    for (int i = 0; i < PLAYER_SIZE; i++)
+    {
+        int sum = 0;
+        for (int j = 0; j < PLAYER_SIZE; j++)
+        {
+            if (currentAuction->item_list[j].winner == i)
+            {
+                sum += currentAuction->item_list[j].rarity;
+            }
+        }
+        printf("%s won items with a total rarity of %d\n", currentAuction->bidders[i].name, sum);
+    }
+
+    shmdt(currentAuction);
+
+    shmctl(shmid, IPC_RMID, NULL);
+
     return 0;
 }
 

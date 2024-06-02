@@ -10,6 +10,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
+#include <semaphore.h>
+#include <fcntl.h>
 
 /*******************************************/
 /*		G L O B A L S                      */
@@ -27,6 +29,7 @@ typedef struct
     char name[20];
     int rarity;
     int price;
+    int winner;
 } item;
 
 typedef struct 
@@ -34,7 +37,6 @@ typedef struct
     int pid;
     char name[20];
     int money;
-    item item_inventory[PLAYER_SIZE];
 } bidder;
 
 typedef struct 
