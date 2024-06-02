@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
+#include <semaphore.h>
+#include <fcntl.h>
 
 /*******************************************/
 /*		G L O B A L S                      */

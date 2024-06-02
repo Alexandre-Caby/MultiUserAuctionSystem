@@ -4,8 +4,20 @@ int shmid;
 current_auction *currentAuction;
 sem_t *sem;
 
+/**
+ * function main
+ * @brief Main function of the auction manager
+ * @return int
+ */
 int main()
 {
+    // Initialize the semaphore
+    sem = sem_open("/auction_sem", O_CREAT, 0644, 1);
+    if (sem == SEM_FAILED) {
+        perror("sem_open");
+        exit(1);
+    }
+
     // Signal handler
     signal(SIGUSR1, handleConnection);
 
@@ -54,6 +66,8 @@ int main()
             }
         }
 
+        // Wait for the semaphore
+        sem_wait(sem);
         sleep(65);
        
         if (currentAuction->last_bidder == -1)
@@ -64,6 +78,8 @@ int main()
             currentAuction->bidders[currentAuction->last_bidder].money = currentAuction->bidders[currentAuction->last_bidder].money - currentAuction->last_bid;
             currentAuction->item_list[currentAuction->current_bid_item].winner = currentAuction->last_bidder;
         }
+        // Post the semaphore
+        sem_post(sem);
     }
 
     printf("\nAuction is over ! \n");
@@ -94,9 +110,20 @@ int main()
 
     shmctl(shmid, IPC_RMID, NULL);
 
+    // Close the semaphore
+    sem_close(sem);
+
+    // Unlink the semaphore
+    sem_unlink("/auction_sem");
+
     return 0;
 }
 
+/**
+ * function handleConnection
+ * @brief Handle the connection of a bidder
+ * @return void
+ */
 void handleConnection()
 {
     printf("Received signal from client %d\n", currentAuction->bidders[currentAuction->last_bidder].pid);
@@ -107,8 +134,9 @@ void handleConnection()
 }
 
 /**
- * Print all bidders
- * @description Print all bidders in the current auction
+ * function printBidders
+ * @brief print all bidders
+ * @return void
  * @warning Do not use this function before every bidder has connected
  */
 void printBidders()
@@ -124,8 +152,10 @@ void printBidders()
 }
 
 /**
- * Print a specific bidder
+ * function printBidder
+ * @brief print a specific bidder
  * @param i The index of the bidder
+ * @return void
  */
 void printBidder(int i)
 {
@@ -135,8 +165,9 @@ void printBidder(int i)
 }
 
 /**
- * Print all items
- * @description Print all items in the current auction
+ * function printItems
+ * @brief print all items
+ * @return void
  * @warning Do not use this function before every item is chosen
  */
 void printItems()
@@ -152,8 +183,10 @@ void printItems()
 }
 
 /**
- * Print a specific item
+ * function printItem
+ * @brief print a specific item
  * @param i The index of the item
+ * @return void
  */
 void printItem(int i)
 {
