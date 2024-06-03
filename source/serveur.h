@@ -58,3 +58,4 @@ void printBidders();
 void printBidder(int i);
 void printItems();
 void printItem(int i);
+void displayASCIIAuction();

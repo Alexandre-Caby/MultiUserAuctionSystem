@@ -20,8 +20,6 @@ int main()
     sa.sa_flags = SA_NODEFER;
     sigaction(SIGUSR1, &sa, NULL);
 
-
-
     sa.sa_handler = displayEndResults;
     sigaction(SIGUSR2, &sa, NULL);
 
@@ -106,86 +104,92 @@ void connectToServer()
  * @brief Function that handles the bidding process
  * @return void 
  */
+
 void bidInstance()
 {
-    int can_bid = 1;
+    bool can_bid = true;
+    bool skip_bid = false; 
 
-        if (currentAuction->last_bid == currentAuction->item_list[currentAuction->current_bid_item].price)
+    if (currentAuction->last_bid == currentAuction->item_list[currentAuction->current_bid_item].price)
+    {
+        system("clear");
+        switch (currentAuction->current_bid_item)
         {
-            switch (currentAuction->current_bid_item)
-            {
             case 0:
-                system("clear");
                 printf("Auction is starting.. Bidding on first item\n");
-                sleep(5);
                 break;
             case 1:
-                system("clear");
                 printf("Auction is starting.. Bidding on second item\n");
-                sleep(5);
                 break;
             case 2:
-                system("clear");
                 printf("Auction is starting.. Bidding on third item\n");
-                sleep(5);
                 break;
             default:
+                printf("Auction is starting.. Bidding on another item\n");
                 break;
-            }
         }
-        else
-        {
-            system("clear");
-            printf("New bid detected!\n");
-            sleep(1);
-        }
-
-    while (can_bid)
+        sleep(5);
+    }
+    else
     {
+        system("clear");
+        printf("New bid detected!\n");
+        sleep(1);
+    }
 
+    while (can_bid && !skip_bid)
+    {
         system("clear");
 
-        // print the current item bid
-        printf("Current item: %s\n", currentAuction->item_list[currentAuction->current_bid_item].name);
-        printf("Current bid: %d\n", currentAuction->last_bid);
+        printf("+--------------------------------------------+\n");
+        printf("|              Current Auction               |\n");
+        printf("+--------------------------------------------+\n");
+        printf("| Current item: %-28s |\n", currentAuction->item_list[currentAuction->current_bid_item].name);
+        printf("| Current bid : %-28d |\n", currentAuction->last_bid);
 
         if (currentAuction->last_bidder != -1)
-            printf("Last bidder: %s\n", currentAuction->bidders[currentAuction->last_bidder].name);
+            printf("| Last bidder : %-28s |\n", currentAuction->bidders[currentAuction->last_bidder].name);
 
-        printf("Your money: %d\n", currentAuction->bidders[bidder_id].money);
+        printf("| Your money  : %-28d |\n", currentAuction->bidders[bidder_id].money);
+        printf("+--------------------------------------------+\n");
 
         if (currentAuction->bidders[bidder_id].money > currentAuction->last_bid)
         {
             int bid;
-            printf("Enter your bid: ");
-            scanf("%d", &bid);
-            if( bid == 0) {
-                printf("Skipping bidding on this item\n");
-                can_bid = 0;
-            }
-            else if (bid > currentAuction->last_bid && bid <= currentAuction->bidders[bidder_id].money)
-            {
-                currentAuction->last_bid = bid;
-                currentAuction->last_bidder = bidder_id;
-                printf("Bid successful\n");
-                sleep(0.2);
-                for (int i = 0; i < PLAYER_SIZE; i++)
-                {
-                    if (currentAuction->bidders[i].pid != 0 && i != bidder_id)
-                        kill(currentAuction->bidders[i].pid, SIGUSR1);
+            printf("Enter your bid (or enter -1 to skip): ");
+
+            if (!skip_bid) { 
+                scanf("%d", &bid);
+
+                if (bid == -1) {
+                    printf("Skipping bidding on this item\n");
+                    skip_bid = true; 
+                } else if (bid > currentAuction->last_bid && bid <= currentAuction->bidders[bidder_id].money) {
+                    currentAuction->last_bid = bid;
+                    currentAuction->last_bidder = bidder_id;
+                    printf("Bid successful\n");
+                    sleep(0.2);
+
+                    for (int i = 0; i < PLAYER_SIZE; i++)
+                    {
+                        if (currentAuction->bidders[i].pid != 0 && i != bidder_id)
+                            kill(currentAuction->bidders[i].pid, SIGUSR1);
+                    }
+                    can_bid = false;
+                } else if (bid <= currentAuction->last_bid || bid > currentAuction->bidders[bidder_id].money) {
+                    printf("Bid too low or you don't have enough money\n");
+                    sleep(1);
                 }
-                can_bid = 0;
-            }
-            else
-            {
-                printf("Bid too low or you don't have enough money\n");
+            } else {
+                printf("You have skipped your turn\n");
                 sleep(1);
+                can_bid = false; // Sortez de la boucle de saisie
             }
         }
         else
         {
             printf("You don't have enough money to bid.. Waiting for the current round to end...\n");
-            can_bid = 0;
+            can_bid = false;
         }
     }
     sem_post(sem);
@@ -196,30 +200,29 @@ void bidInstance()
  * @brief Displays the results of the auction
  * @return void 
  */
-void displayEndResults()
-{
+void displayEndResults() {
     system("clear");
     printf("Auction is over ! \n");
 
-    for (int i = 0; i < PLAYER_SIZE; i++)
-    {
+    printf("+-----------------+----------------------+\n");
+    printf("|     Player      |      Total Rarity    |\n");
+    printf("+-----------------+----------------------+\n");
+
+    for (int i = 0; i < PLAYER_SIZE; i++) {
         int sum = 0;
-        for (int j = 0; j < PLAYER_SIZE; j++)
-        {
-            if (currentAuction->item_list[j].winner == i)
-            {
+        for (int j = 0; j < PLAYER_SIZE; j++) {
+            if (currentAuction->item_list[j].winner == i) {
                 sum += currentAuction->item_list[j].rarity;
             }
         }
-        if (sum == 0)
-        {
-            printf("%s didn't win any items\n", currentAuction->bidders[i].name);
-        }
-        else
-        {
-            printf("%s won items with a total rarity of %d\n", currentAuction->bidders[i].name, sum);
+        if (sum == 0) {
+            printf("| %-15s | %-19s |\n", currentAuction->bidders[i].name, "Didn't win any items");
+        } else {
+            printf("| %-15s | %-20d |\n", currentAuction->bidders[i].name, sum);
         }
     }
+
+    printf("+-----------------+----------------------+\n");
 
     sleep(10);
     auctionActive = 0;
