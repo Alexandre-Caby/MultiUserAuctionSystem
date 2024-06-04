@@ -156,19 +156,19 @@ void bidInstance()
         if (currentAuction->bidders[bidder_id].money > currentAuction->last_bid)
         {
             int bid;
-            printf("Enter your bid (or enter -1 to skip): ");
+            printf("Enter your bid (or enter -1 to skip this item) : ");
 
             if (!skip_bid) { 
                 scanf("%d", &bid);
 
                 if (bid == -1) {
-                    printf("Skipping bidding on this item\n");
+                    printf("You have skipped this item\n");
                     skip_bid = true; 
                 } else if (bid > currentAuction->last_bid && bid <= currentAuction->bidders[bidder_id].money) {
                     currentAuction->last_bid = bid;
                     currentAuction->last_bidder = bidder_id;
                     printf("Bid successful\n");
-                    sleep(0.2);
+                    sleep(1);
 
                     for (int i = 0; i < PLAYER_SIZE; i++)
                     {
@@ -176,7 +176,8 @@ void bidInstance()
                             kill(currentAuction->bidders[i].pid, SIGUSR1);
                     }
                     can_bid = false;
-                } else if (bid <= currentAuction->last_bid || bid > currentAuction->bidders[bidder_id].money) {
+                    while (1);
+                } else if ((bid <= currentAuction->last_bid || bid > currentAuction->bidders[bidder_id].money)) {
                     printf("Bid too low or you don't have enough money\n");
                     sleep(1);
                 }
