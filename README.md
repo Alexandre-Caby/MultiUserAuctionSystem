@@ -15,7 +15,7 @@ Follow these steps to get your Auction System up and running:
 Clone the Auction System repository to your local machine. You can do this by running the following command in your terminal:
 
 ```bash
-git clone [\[Multi User Auction System repository\]](https://github.com/Alexandre-Caby/MultiUserAuctionSystem)
+git clone https://github.com/Alexandre-Caby/MultiUserAuctionSystem
 ```
 
 2. Navigating to the Project Directory
