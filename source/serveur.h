@@ -53,6 +53,7 @@ typedef struct
 /*		P R O T O T Y P E S                */
 /*******************************************/
 
+void serverDisconnection();
 void handleConnection();
 void printBidders();
 void printBidder(int i);

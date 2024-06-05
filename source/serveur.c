@@ -13,13 +13,15 @@ int main()
 {
     // Initialize the semaphore
     sem = sem_open("/auction_sem", O_CREAT, 0644, 1);
-    if (sem == SEM_FAILED) {
+    if (sem == SEM_FAILED)
+    {
         perror("sem_open");
         exit(1);
     }
 
     // Signal handler
     signal(SIGUSR1, handleConnection);
+    signal(SIGINT, serverDisconnection);
 
     // Create a blank auction
     current_auction auction;
@@ -67,7 +69,8 @@ int main()
 
         for (int j = 0; j < PLAYER_SIZE; j++)
         {
-            if (currentAuction->bidders[j].pid != 0) {
+            if (currentAuction->bidders[j].pid != 0)
+            {
                 printf("\nSending signal to client %d\n", currentAuction->bidders[j].pid);
                 kill(currentAuction->bidders[j].pid, SIGUSR1);
             }
@@ -76,11 +79,13 @@ int main()
         // Wait for the semaphore
         sem_wait(sem);
         sleep(65);
-       
+
         if (currentAuction->last_bidder == -1)
         {
             printf("\nNo one bid on the item\n");
-        } else {
+        }
+        else
+        {
             printf("\n+-------------------------------------+\n");
             printf("|        Auction Result               |\n");
             printf("+-------------------------------------+\n");
@@ -109,10 +114,13 @@ int main()
     printf("|      Player         |     Total Rarity    |\n");
     printf("+---------------------+---------------------+\n");
 
-    for (int i = 0; i < PLAYER_SIZE; i++) {
+    for (int i = 0; i < PLAYER_SIZE; i++)
+    {
         int sum = 0;
-        for (int j = 0; j < PLAYER_SIZE; j++) {
-            if (currentAuction->item_list[j].winner == i) {
+        for (int j = 0; j < PLAYER_SIZE; j++)
+        {
+            if (currentAuction->item_list[j].winner == i)
+            {
                 sum += currentAuction->item_list[j].rarity;
             }
         }
@@ -143,6 +151,35 @@ int main()
     sem_unlink("/auction_sem");
 
     return 0;
+}
+
+/**
+ * function serverDisconnection
+ * @brief Handle the disconnection of the server
+ * @return void
+ */
+void serverDisconnection()
+{
+    printf("\nServer is shutting down\n");
+    for (int i = 0; i < PLAYER_SIZE; i++)
+    {
+        if (currentAuction->bidders[i].pid != 0)
+        {
+            kill(currentAuction->bidders[i].pid, SIGKILL);
+        }
+    }
+
+    shmdt(currentAuction);
+
+    shmctl(shmid, IPC_RMID, NULL);
+
+    // Close the semaphore
+    sem_close(sem);
+
+    // Unlink the semaphore
+    sem_unlink("/auction_sem");
+
+    exit(0);
 }
 
 /**
@@ -254,9 +291,10 @@ void printItem(int i)
 /**
  * function displayASCIIAuction
  * @brief Displays an ASCII art of an auction
- * @return void 
+ * @return void
  */
-void displayASCIIAuction() {
+void displayASCIIAuction()
+{
     printf("                         ________\n");
     printf("                        |        |\n");
     printf("                        | Vendu! |\n");
