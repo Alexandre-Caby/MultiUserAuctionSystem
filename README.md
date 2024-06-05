@@ -56,7 +56,7 @@ Each client will connect to the auction manager, and you can begin participating
 Once the client is running, you will be able to interact with the Auction System through a series of round-based auctions. The client will display the current auction status, and you can place bids on items as they are auctioned.
 
 ## Stopping the application
-When you have finished all auctions, the auction manager and clients will be stopped automatically. If you need to stop the server manually, you can do so by pressing `Ctrl+C` in the terminal where the auction manager is running.
+When you have finished all auctions, the auction manager and clients will be stopped automatically. If you need to stop the server manually, you can do so by pressing `Ctrl+C` in the terminal where the auction manager is running. It will stop the server and close all client connections.
 
 ## Troubleshooting
 If you encounter any issues while running the Auction System, make sure that:
